@@ -2,8 +2,8 @@
 
 #Set Paths and URLS
 DATE_STRING="`date +%Y%m%d_%H%M`"
-#GROMACS_VERSION="5.0-rc1"
-GROMACS_VERSION="4.6.5"
+GROMACS_VERSION="5.0"
+#GROMACS_VERSION="4.6.5"
 LOG_FILE="`pwd`/GROMACS-${GROMACS_VERSION}-install-${DATE_STRING}.log"
 GROMACS_ARCHIVE=gromacs-${GROMACS_VERSION}.tar.gz
 GROMACS_DOWNLOAD_URL=ftp://ftp.gromacs.org/pub/gromacs/gromacs-${GROMACS_VERSION}.tar.gz
@@ -28,12 +28,12 @@ set 2>&1 | tee -a ${LOG_FILE}
 cat /proc/cpuinfo | sort | uniq 2>&1 | tee -a ${LOG_FILE}
 
 #Download, Configure, Build and Install
-#wget ${GROMACS_DOWNLOAD_URL} 2>&1 | tee -a ${LOG_FILE}
-#tar -xzvf ${GROMACS_ARCHIVE} 2>&1 | tee -a ${LOG_FILE}
+wget ${GROMACS_DOWNLOAD_URL} 2>&1 | tee -a ${LOG_FILE}
+tar -xzvf ${GROMACS_ARCHIVE} 2>&1 | tee -a ${LOG_FILE}
 
 if [ ${BUILD_NONE_MPI_VERSION} -ne 0 ] ; then
 
-	echo "Building and installing MPI Version of GROMACS" 2>&1 | tee -a ${LOG_FILE}
+	echo "Building and installing none MPI Version of GROMACS" 2>&1 | tee -a ${LOG_FILE}
 	mkdir -p ${GROMACS_BUILD_DIR}
 	cd ${GROMACS_BUILD_DIR}
 
