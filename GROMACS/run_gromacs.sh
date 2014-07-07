@@ -109,7 +109,7 @@ function launch_gromacs_pbs_openmpi {
 		LOG_FILE_NAME=$6
 	else
 		input_basename=$(basename "${INPUT}" .tpr)
-		LOG_FILE_NAME="${input_basename}.${NB}.${NPME}.${NP}x${OMP_NUM_THREADS}.md.log"
+		LOG_FILE_NAME="${input_basename}.${NB}.${NPME}.${PBS_NUM_NODES}.${NP}x${OMP_NUM_THREADS}.md.log"
 	fi 
 	ENER_FILE_NAME="${LOG_FILE_NAME}.ener"
 	
@@ -165,13 +165,15 @@ function launch_gromacs_slurm_cray_xc30 {
 		LOG_FILE_NAME=$5
 	else
 		input_basename=$(basename "${INPUT}" .tpr)
-		LOG_FILE_NAME="${input_basename}.${NB}.${NPME}.${SLURM_NTASKS}x${OMP_NUM_THREADS}.md.log"
+		LOG_FILE_NAME="${input_basename}.${NB}.${NPME}.${SLURM_JOB_NUM_NODES}.${SLURM_NTASKS}x${OMP_NUM_THREADS}.md.log"
 	fi 
 	ENER_FILE_NAME="${LOG_FILE_NAME}.ener"
 	
 	cmd="aprun -cc none -n ${SLURM_NTASKS} -d ${OMP_NUM_THREADS} -N ${PPN} ${MDRUN} -ntomp ${OMP_NUM_THREADS} -pin on -nstlist ${NSTLIST} -npme ${NPME} ${GPU_ID_CMD} -nb ${NB} -s ${INPUT} -g ${LOG_FILE_NAME} -e ${ENER_FILE_NAME} -maxh ${MAXH} -resethway -noconfout -v"
 	echo "${cmd}"
 	${cmd}
+	echo "Slurm Job ID: ${SLURM_JOBID} was executed on " >> ${LOG_FILE_NAME}
+	echo $SLURM_JOB_NODELIST >> ${LOG_FILE_NAME}
 }
 
 if [ "$1" == "daint" ]; then
@@ -190,20 +192,27 @@ fi
 if [ "$1" == "daint" ]; then
 	PPN=$(( ${SLURM_NTASKS}/${SLURM_JOB_NUM_NODES} ))
 	#                              NPME NSTLIST NB  INPUT    LOG_FILE_NAME
-	launch_gromacs_slurm_cray_xc30 0    0       gpu ${INPUT}
+	#launch_gromacs_slurm_cray_xc30 0    0       gpu ${INPUT}
+	##                              NPME NSTLIST NB  INPUT    LOG_FILE_NAME
+	#launch_gromacs_slurm_cray_xc30 -1   0       cpu ${INPUT}
+	#cp *.md.log /users/jkraus/workspace/GROMACS/benchmarks/KTH
+	#if [ ${PPN} -ge 4 ]; then
+	#	for (( npmepn=$(( ${PPN}/4 )); npmepn<=$(( ${PPN}/3 )); npmepn++ )); do
+	#		npme=$(( ${npmepn}*${SLURM_JOB_NUM_NODES} ))
+	#		#                              NPME    NSTLIST NB  INPUT    LOG_FILE_NAME
+	#		launch_gromacs_slurm_cray_xc30 ${npme} 0       gpu ${INPUT}
+	#	done
+	#fi
 	#                              NPME NSTLIST NB  INPUT    LOG_FILE_NAME
-	launch_gromacs_slurm_cray_xc30 -1   0       cpu ${INPUT}
-	cp *.md.log /users/jkraus/workspace/GROMACS/benchmarks/KTH
-	if [ ${PPN} -ge 4 ]; then
-		for (( npmepn=$(( ${PPN}/4 )); npmepn<=$(( ${PPN}/3 )); npmepn++ )); do
-			npme=$(( ${npmepn}*${SLURM_JOB_NUM_NODES} ))
-			#                              NPME    NSTLIST NB  INPUT    LOG_FILE_NAME
-			launch_gromacs_slurm_cray_xc30 ${npme} 0       gpu ${INPUT}
-		done
+	#launch_gromacs_slurm_cray_xc30 -1   0       cpu ${INPUT}
+	#                              NPME NSTLIST NB  INPUT    LOG_FILE_NAME
+	if [ ${PPN} -eq 8 ]; then
+		npmepn=3 #$(( ${PPN}/4 ))
+		npme=$(( ${npmepn}*${SLURM_JOB_NUM_NODES} ))
+		#                              NPME    NSTLIST NB  INPUT    LOG_FILE_NAME
+		launch_gromacs_slurm_cray_xc30 ${npme} 0       gpu ${INPUT}
 	fi
-	#                              NPME NSTLIST NB  INPUT    LOG_FILE_NAME
-	launch_gromacs_slurm_cray_xc30 -1   0       cpu ${INPUT}
-	cp *.md.log /users/jkraus/workspace/GROMACS/benchmarks/KTH
+	cp *.md.log /users/jkraus/workspace/GROMACS/benchmarks/KTH/lignocellulose
 elif [ "$1" == "PSG" ]; then
 	for ompt in 1 5 10 20; do
 		#                           OMP_NUM_THREADS NPME NSTLIST NB  INPUT    LOG_FILE_NAME
