@@ -18,5 +18,5 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native -O3")
 CUDA_ADD_EXECUTABLE(nvml_test nvml_test.cu matrixMul.cu )
 
 if(NVML_FOUND)
-	target_link_libraries(nvml_test ${NVML_LIBRARIES})
+	target_link_libraries(nvml_test ${NVML_LIBRARY})
 endif(NVML_FOUND)
