@@ -19,7 +19,9 @@ int main()
 	
 	double_vector a(n, 0.5);
 	double_vector b(n, 0.5);
-	double_vector c(n, 0.0);
+	double* c = new double[n];
+	for ( int i = 0; i < n; ++i )
+		c[i] = 0.0;
 	
 	vecadd<<<64,256>>>(&(c[0]),&(a[0]),&(b[0]),n);
 	cudaDeviceSynchronize();
@@ -34,6 +36,8 @@ int main()
 	}
 	
 	std::cout<<"SUCCESS"<<std::endl;
+	
+	delete[] c;
 	
 	return 0;
 }
